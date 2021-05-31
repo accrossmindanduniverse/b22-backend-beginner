@@ -6,7 +6,7 @@ module.exports = {
     const key = Object.values(query)
     return new Promise((resolve, reject) => {
       if (key) {
-        db.query(`SELECT items.id, items.name, categories.name AS category_name, variants.description AS variant_description,items.price, items.created_at, items.updated_at FROM items LEFT JOIN item_categories ON item_categories.item_id = items.id LEFT JOIN categories ON categories.id = item_categories.category_id LEFT JOIN item_variants ON item_variants.item_id = items.id LEFT JOIN variants ON variants.id = items.variant_id WHERE items.name LIKE '%${key}%'`, function (err, res) {
+        db.query(`SELECT items.id, items.name, categories.name AS category_name, variants.description AS variant_description,items.price, items.created_at, items.updated_at FROM items LEFT JOIN item_categories ON item_categories.item_id = items.id LEFT JOIN categories ON categories.id = item_categories.category_id LEFT JOIN item_variants ON item_variants.item_id = items.id LEFT JOIN variants ON variants.id = items.variant_id WHERE items.name LIKE '%${key[0]}%'`, function (err, res) {
           if (!err) {
             resolve(res)
           } else {

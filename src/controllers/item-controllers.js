@@ -5,9 +5,8 @@ const time = require('../helpers/time')
 module.exports = {
 
   getItemsData: async function (req, res) {
-    const searchParams = Object.values({
-      search: req.query.search
-    })
+    const searchParams = Object.values(req.query)
+    searchParams.search = searchParams.search || ''
     try {
       const result = await itemModels.getAllAndDetails(searchParams)
       return helper.response(res, 'success', result, 200)
