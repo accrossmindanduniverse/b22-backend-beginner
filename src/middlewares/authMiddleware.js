@@ -1,0 +1,75 @@
+const key = process.env
+const helper = require('../helpers')
+const jwt = require('jsonwebtoken')
+
+module.exports = {
+
+  verifyJwt: function (req, res, next) {
+    const headers = req.headers
+    if (headers?.authorization) {
+      if (headers.authorization.startsWith('Bearer')) {
+        try {
+          const token = headers.authorization.slice(7)
+          const user = jwt.verify(token, key.APP_KEY)
+          req.authUser = user
+          console.log(res)
+          next()
+        } catch (err) {
+          console.log(err)
+          return helper.response(res, 'fail', 'Session expired, you have to signin first', 400)
+        }
+      }
+    } else {
+      return helper.response(res, 'fail', 'Auth token needed', 400)
+    }
+  },
+
+  verifyAdmin: function (req, res, next) {
+    const headers = req.headers
+    if (headers?.authorization) {
+      if (headers.authorization.startsWith('Bearer')) {
+        try {
+          const token = headers.authorization.slice(7)
+          const decode = jwt.verify(token, key.APP_KEY)
+          req.decodedToken = decode
+          if (req.decodedToken.role !== 'admin') {
+            return helper.response(res, false, 'you do not have any permission to access this resource')
+          }
+          next()
+        } catch (err) {
+          console.log(err)
+          return helper.response(res, false, 'Auth token needed', 400)
+        }
+      } else {
+        console.error()
+      }
+    } else {
+      console.error()
+    }
+  },
+
+  verifyUser: function (req, res, next) {
+    const headers = req.headers
+    if (headers?.authorization) {
+      if (headers.authorization.startsWith('Bearer')) {
+        try {
+          const token = headers.authorization.slice(7)
+          const decode = jwt.verify(token, key.APP_KEY)
+          req.decodedToken = decode
+          if (req.decodedToken.role !== 'admin' || req.decodedToken.role !== 'user') {
+            return helper.response(res, false, 'please sign-in first')
+          }
+          next()
+        } catch (err) {
+          console.log(err)
+          return helper.response(res, false, 'Auth token needed', 400)
+        }
+      } else {
+        console.error()
+      }
+    } else {
+      console.error()
+    }
+  }
+
+}

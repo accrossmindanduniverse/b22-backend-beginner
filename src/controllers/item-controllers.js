@@ -1,100 +1,117 @@
 const helper = require('../helpers')
-const itemModels = require('../models/item-models')
+const itemModels = require('../models/itemModels')
+const { postItemsToItemCategory } = require('../models/itemCategories-models')
 const time = require('../helpers/time')
+const env = process.env
 
 module.exports = {
 
   getItemsData: async function (req, res) {
-    const searchParams = Object.values(req.query)
-    searchParams.search = searchParams.search || ''
+    const cond = req.query
+    cond.search = cond.search || ''
+    cond.sort = cond.sort || {}
+    cond.sort.name = cond.sort.name || 'asc'
+    cond.limit = parseInt(cond.limit) || 5
+    cond.offset = parseInt(cond.offset) || 0
+    cond.page = parseInt(cond.page) || 1
+    cond.offset = (cond.page * cond.limit) - cond.limit
+    const pageInfo = {}
+
     try {
-      const result = await itemModels.getAllAndDetails(searchParams)
-      return helper.response(res, 'success', result, 200)
+      const result = await itemModels.getAllAndDetails(cond)
+      result.map((e) => {
+        if (e.picture !== null) {
+          e.picture = `${env.APP_URL}${e.picture}`
+        }
+        return e
+      })
+      const resultCount = await itemModels.getItemsCount(cond)
+      console.log(resultCount)
+      const totalData = resultCount[0].count
+      const totalPage = Math.ceil(totalData / cond.limit)
+      pageInfo.totalData = totalData
+      pageInfo.currentPage = cond.page
+      pageInfo.totalPage = totalPage
+      pageInfo.limitPage = cond.limit
+      pageInfo.nextPage = cond.page < totalPage ? `${env.APP_URL}/items?page=${cond.page + 1}` : null
+      pageInfo.prevPage = cond.page <= totalPage || cond.page === 1 ? `${env.APP_URL}/items?page=${cond.page - 1}` : null
+      if (pageInfo.prevPage.endsWith('0')) {
+        pageInfo.prevPage = null
+      }
+      if (result.length === 0) {
+        return helper.response(res, true, 'there is no item anymore', 200)
+      }
+      return helper.response(res, true, result, 200, pageInfo)
     } catch (err) {
-      return helper.response(res, 'fail', 'Item not found!', 404)
+      return helper.response(res, false, 'Item not found!', 400)
+    }
+  },
+
+  getItemById: async function (req, res) {
+    const { id } = req.params
+    try {
+      const result = await itemModels.getItemById(id)
+      if (result[0].picture !== undefined || result[0].picture !== null) {
+        result[0].picture = `${env.APP_URL}${result[0].picture}`
+      }
+      return helper.response(res, true, result, 200)
+    } catch (err) {
+      return helper.response(res, false, `item with (id: ${id}) not found`, 404)
     }
   },
 
   getPriceDetail: async function (req, res) {
-    const priceDetail = Object.values({
-      expensive: req.query.expensive
-    })
+    const priceDetail = req.query
+    priceDetail.sort = priceDetail.sort || 'price'
+    priceDetail.sort.price = priceDetail.sort.price || 'asc'
     try {
       const result = await itemModels.getPriceDetail(priceDetail)
-      return helper.response(res, 'success', result, 200)
+      return helper.response(res, true, result, 200)
     } catch (err) {
       console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error!', 500)
+      return helper.response(res, false, 'Internal Server Error!', 500)
     }
   },
 
   postItemData: async function (req, res) {
     const setData = req.body
+    setData.picture = `${env.APP_UPLOAD_ROUTE}/${req.file.filename}`
+
     try {
+      if (setData.price < 1) {
+        return helper.response(res, false, 'Cannot input number below 1', 400)
+      }
       const result = await itemModels.postItems(setData)
-      console.log(res)
-      return helper.response(res, 'success', result, 200)
-    } catch (err) {
-      console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error!', 500)
-    }
-  },
-
-  postItemsToItemCategory: async function (req, res) {
-    const { id } = req.params
-    try {
-      const result = await itemModels.postItemsToItemCategory(id)
-      return helper.response(res, 'success', result, 200)
-    } catch (err) {
-      console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error!', 500)
-    }
-  },
-
-  postCategoryItems: async function (req, res) {
-    const setData = req.body
-    try {
-      const result = await itemModels.postCategoryItems(setData)
-      return helper.response(res, 'success', result, 200)
-    } catch (err) {
-      console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error!', 500)
-    }
-  },
-
-  postItemsToItemVariant: async function (req, res) {
-    const { id } = req.params
-    try {
-      const result = await itemModels.postItemsToItemVariant(id)
-      return helper.response(res, 'success', result, 200)
-    } catch (err) {
-      console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error!', 500)
-    }
-  },
-
-  postItemsToVariantItem: async function (req, res) {
-    const setData = req.body
-    try {
-      const result = await itemModels.postItemsToVariantItem(setData)
-      return helper.response(res, 'success', result, 200)
-    } catch (err) {
-      console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error!', 500)
+      if (typeof setData.category_id !== 'object') {
+        setData.category_id = [setData.category_id]
+      }
+      await setData.category_id.forEach((categoryId) => {
+        const categoryData = {
+          item_id: result.insertId,
+          category_id: categoryId
+        }
+        postItemsToItemCategory(categoryData, () => {
+          console.log(`product ${result.insertId} has been created on category ${categoryId}!`)
+        })
+      })
+      return helper.response(res, true, result, 200)
+    } catch (error) {
+      console.log(error)
+      return helper.response(res, false, 'Internal Server Error!', 500)
     }
   },
 
   updateItem: async function (req, res) {
     const { id } = req.params
     const { name, price } = req.body
-
+    console.log(req.authUser)
     const updateData = { name, price, updated_at: time.now() }
     try {
       const result = await itemModels.updateItemDatas(updateData, id)
-      return helper.response(res, 'success', result, 200)
+      return helper.response(res, true, result, 200)
     } catch (err) {
       console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error!', 500)
+      return helper.response(res, false, 'Internal Server Error!', 500)
     }
   },
 
@@ -106,10 +123,10 @@ module.exports = {
     try {
       const result = await itemModels.updateItemPartial(updateData)
       console.log(updateData)
-      return helper.response(res, 'success', result, 200)
+      return helper.response(res, true, result, 200)
     } catch (err) {
       console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error!', 500)
+      return helper.response(res, false, 'Internal Server Error!', 500)
     }
   },
 
@@ -117,10 +134,10 @@ module.exports = {
     const { id } = req.params
     try {
       const result = await itemModels.deleteItem(id)
-      return helper.response(res, 'success', result, 200)
+      return helper.response(res, true, result, 200)
     } catch (err) {
       console.log(err)
-      return helper.response(req, 'fail', 'Internal Server Error!', 500)
+      return helper.response(req, false, 'Internal Server Error!', 500)
     }
   }
 
