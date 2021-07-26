@@ -6,8 +6,8 @@ const authMiddleware = require('../middlewares/authMiddleware')
 // endpoints
 
 // gets
-router.get('/', authMiddleware.verifyJwt, itemsController.getItemsData)
+router.get('/', itemsController.getItemsData)
 router.get('/price', authMiddleware.verifyJwt, itemsController.getPriceDetail)
-router.get('/:id', authMiddleware.verifyJwt, itemsController.getItemById)
+router.get('/:id', itemsController.getItemById)
 
 module.exports = router

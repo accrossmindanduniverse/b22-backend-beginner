@@ -16,6 +16,7 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json())
 
 app.use('/', routes)
+// app.use('/upload', express.static('./assets'))
 app.use(env.APP_UPLOAD_ROUTE, express.static(env.APP_UPLOAD_PATH))
 
 app.listen(port, () => {

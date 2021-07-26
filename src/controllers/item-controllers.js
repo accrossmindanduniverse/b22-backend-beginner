@@ -11,7 +11,7 @@ module.exports = {
     cond.search = cond.search || ''
     cond.sort = cond.sort || {}
     cond.sort.name = cond.sort.name || 'asc'
-    cond.limit = parseInt(cond.limit) || 5
+    cond.limit = parseInt(cond.limit) || 7
     cond.offset = parseInt(cond.offset) || 0
     cond.page = parseInt(cond.page) || 1
     cond.offset = (cond.page * cond.limit) - cond.limit
@@ -21,7 +21,7 @@ module.exports = {
       const result = await itemModels.getAllAndDetails(cond)
       result.map((e) => {
         if (e.picture !== null) {
-          e.picture = `${env.APP_URL}${e.picture}`
+          e.picture = `${env.APP_URL}/${e.picture}`
         }
         return e
       })
@@ -76,7 +76,7 @@ module.exports = {
   postItemData: async function (req, res) {
     const setData = req.body
     setData.picture = `${env.APP_UPLOAD_ROUTE}/${req.file.filename}`
-
+    console.log(req.authUser)
     try {
       if (setData.price < 1) {
         return helper.response(res, false, 'Cannot input number below 1', 400)
@@ -134,6 +134,9 @@ module.exports = {
     const { id } = req.params
     try {
       const result = await itemModels.deleteItem(id)
+      if (result.affectedRows === 0) {
+        return helper.response(res, false, 'item not found', 400)
+      }
       return helper.response(res, true, result, 200)
     } catch (err) {
       console.log(err)

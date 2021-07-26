@@ -12,7 +12,6 @@ module.exports = {
           const token = headers.authorization.slice(7)
           const user = jwt.verify(token, key.APP_KEY)
           req.authUser = user
-          console.log(res)
           next()
         } catch (err) {
           console.log(err)
@@ -32,8 +31,8 @@ module.exports = {
           const token = headers.authorization.slice(7)
           const decode = jwt.verify(token, key.APP_KEY)
           req.decodedToken = decode
-          if (req.decodedToken.role !== 'admin') {
-            return helper.response(res, false, 'you do not have any permission to access this resource')
+          if (req.decodedToken.result.role !== 'admin') {
+            return helper.response(res, false, 'you do not have any permission to access this resource', 400)
           }
           next()
         } catch (err) {
@@ -56,8 +55,8 @@ module.exports = {
           const token = headers.authorization.slice(7)
           const decode = jwt.verify(token, key.APP_KEY)
           req.decodedToken = decode
-          if (req.decodedToken.role !== 'admin' || req.decodedToken.role !== 'user') {
-            return helper.response(res, false, 'please sign-in first')
+          if (req.decodedToken.result.role !== 'admin' || req.decodedToken.result.role !== 'user') {
+            return helper.response(res, false, 'please sign-in first', 400)
           }
           next()
         } catch (err) {

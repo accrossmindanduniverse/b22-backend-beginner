@@ -6,12 +6,11 @@ module.exports = {
   getAllAndDetails (query) {
     const key = Object.keys(query.sort)[0]
     const sort = query.sort[key]
-    if (query) {
-      if (query.search) {
-        return execPromise(`SELECT items.id, items.picture, items.name, items.picture, items.quantity, items.price, items.item_description, items.delivery_on, items.created_at, items.updated_at FROM items WHERE items.name LIKE '%${query.search}%' ORDER BY ${key} ${sort} LIMIT ? OFFSET ?`, [query.limit, query.offset])
-      } else {
-        return execPromise(`SELECT items.id, items.picture, items.name, items.picture, items.quantity, items.price, items.item_description, items.delivery_on, items.created_at, items.updated_at FROM items ORDER BY ${key} ${sort}  LIMIT ? OFFSET ?`, [query.limit, query.offset])
-      }
+    console.log(query)
+    if (query.search) {
+      return execPromise(`SELECT items.id, items.picture, items.name, items.quantity, items.price, items.item_description, items.delivery_on, items.created_at, items.updated_at FROM items WHERE items.name LIKE '%${query.search}%' ORDER BY ${key} ${sort} LIMIT ? OFFSET ?`, [query.limit, query.offset])
+    } else {
+      return execPromise(`SELECT items.id, items.name, items.picture, items.quantity, items.price, items.item_description, items.delivery_on, items.created_at, items.updated_at FROM items ORDER BY ${key} ${sort} LIMIT ? OFFSET ?`, [query.limit, query.offset])
     }
   },
 

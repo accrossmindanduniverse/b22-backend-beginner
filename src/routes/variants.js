@@ -5,4 +5,6 @@ const { verifyJwt } = require('../middlewares/authMiddleware')
 
 // post
 router.get('/', verifyJwt, itemVariantControllers.getItemVariant)
+router.get('/detail/:id', itemVariantControllers.getSpecificItemsVariant)
+router.get('/:id', itemVariantControllers.getItemVariantsById)
 module.exports = router

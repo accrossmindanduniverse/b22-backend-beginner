@@ -10,15 +10,12 @@ module.exports = {
 
   signUp: async function (req, res) {
     const setData = req.body
+    setData.role = setData.role ? 'admin' : 'user'
     setData.password = await bcrypt.hash(setData.password, await bcrypt.genSalt())
     try {
       const errValidate = validationResult(req)
-      req.params = setData.username
       if (!errValidate.isEmpty()) {
         return helper.response(res, false, errValidate.errors[0].msg, 400)
-      }
-      if (setData.role !== 'admin' && setData.role !== 'user') {
-        return helper.response(res, false, 'role did not match to the record', 400)
       }
       const result = await authModels.signUp(setData)
       return helper.response(res, true, result, 200)
@@ -33,21 +30,26 @@ module.exports = {
     try {
       const result = await authModels.signIn(username)
       if (result.length < 1) return helper.response(res, false, 'username or password did not match to the record', 401)
+      if (result[0].picture !== undefined || result[0].picture !== null) {
+        result[0].picture = `${key.APP_URL}${result[0].picture}`
+      }
       const user = result[0]
+      console.log(user)
       const compare = await bcrypt.compare(password, user.password)
       if (compare) {
-        const token = jwt.sign({ id: user.id, role: user.role, username: user.username }, key.APP_KEY)
-        console.log(token)
-        if (token) {
-          const payload = jwt.verify(token, key.APP_KEY)
+        const userData = jwt.sign({ id: user.id, role: user.role, picture: user.picture, name: user.name, user_address: user.user_address, first_name: user.first_name, last_name: user.last_name, phone_number: user.phone_number, username: user.username, password: user.password }, key.APP_KEY)
+        if (userData) {
+          const payload = jwt.verify(userData, key.APP_KEY)
           const RefreshToken = createNewToken(
             { ...payload },
             key.APP_KEY,
             '10h'
           )
           const data = {
-            refreshToken: RefreshToken
+            refreshToken: RefreshToken,
+            userData: payload
           }
+          console.log(payload)
           return helper.response(res, true, data, 200)
         }
       } else {

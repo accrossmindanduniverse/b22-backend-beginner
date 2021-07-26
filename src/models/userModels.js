@@ -16,6 +16,10 @@ module.exports = {
     return execPromise('SELECT COUNT (*) username FROM users WHERE username=?', [data])
   },
 
+  getUserSinged: function (id) {
+    return execPromise('SELECT id, first_name, last_name, phone_number, picture, name, username, user_address FROM users WHERE id=?', [id])
+  },
+
   updateUserInfo: function (data, id) {
     return new Promise((resolve, reject) => {
       db.query('UPDATE users SET ? WHERE id=?', [data, id], function (err, res) {
@@ -23,6 +27,20 @@ module.exports = {
           resolve(res)
         } else {
           reject(err)
+        }
+      })
+    })
+  },
+
+  updatePassword: function (data) {
+    return new Promise((resolve, reject) => {
+      const key = Object.keys(data)
+      const lastColumn = key[key.length - 1]
+      db.query(`UPDATE users SET ${lastColumn}=? WHERE id=?`, [[data[lastColumn]], data.id], function (err, res) {
+        if (data > 1) {
+          reject(err)
+        } else {
+          resolve(res)
         }
       })
     })
