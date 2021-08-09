@@ -1,7 +1,8 @@
 const helper = require('../helpers')
 const itemModels = require('../models/itemModels')
 const { postItemsToItemCategory } = require('../models/itemCategories-models')
-const time = require('../helpers/time')
+const path = './assets/pictures'
+const fs = require('fs')
 const env = process.env
 
 module.exports = {
@@ -21,7 +22,7 @@ module.exports = {
       const result = await itemModels.getAllAndDetails(cond)
       result.map((e) => {
         if (e.picture !== null) {
-          e.picture = `${env.APP_URL}/${e.picture}`
+          e.picture = `${env.APP_URL}${e.picture}`
         }
         return e
       })
@@ -103,11 +104,14 @@ module.exports = {
 
   updateItem: async function (req, res) {
     const { id } = req.params
-    const { name, price } = req.body
-    console.log(req.authUser)
-    const updateData = { name, price, updated_at: time.now() }
+    const setData = req.body
     try {
-      const result = await itemModels.updateItemDatas(updateData, id)
+      // const getItem = await itemModels.getItemForUpdate(id)
+      console.log(req.file, 'item')
+      if (req.file) {
+        setData.picture = `${env.APP_UPLOAD_ROUTE}/${req.file.filename}`
+      }
+      const result = await itemModels.updateItemDatas(setData, id)
       return helper.response(res, true, result, 200)
     } catch (err) {
       console.log(err)

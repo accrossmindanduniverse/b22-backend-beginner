@@ -18,7 +18,7 @@ module.exports = {
         return helper.response(res, false, errValidate.errors[0].msg, 400)
       }
       const result = await authModels.signUp(setData)
-      return helper.response(res, true, result, 200)
+      return helper.response(res, true, [result, setData], 200)
     } catch (err) {
       console.log(err)
       return helper.response(res, false, 'failed to create account', 400)
@@ -53,7 +53,7 @@ module.exports = {
           return helper.response(res, true, data, 200)
         }
       } else {
-        return helper.response(res, false, 'username or password did not match to the record', 401)
+        return helper.response(res, false, 'email or password did not match to the record', 401)
       }
     } catch (err) {
       console.log(err)

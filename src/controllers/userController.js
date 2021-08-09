@@ -2,6 +2,8 @@ const helper = require('../helpers')
 const userModels = require('../models/userModels')
 const bcrypt = require('bcrypt')
 const env = process.env
+const path = './assets/pictures'
+const fs = require('fs')
 const { validationResult } = require('express-validator')
 
 module.exports = {
@@ -20,11 +22,11 @@ module.exports = {
     }
   },
 
-  getUserSinged: async (req, res) => {
+  getUserSigned: async (req, res) => {
     const { id } = req.authUser.result
     console.log(id)
     try {
-      const result = await userModels.getUserSinged(id)
+      const result = await userModels.getUserSigned(id)
       return helper.response(res, true, result, 200)
     } catch (err) {
       console.log(err)
@@ -36,35 +38,50 @@ module.exports = {
     const setData = req.body
     const id = req.authUser.result.id
     try {
-      const getUserSigned = await userModels.getUserSinged(id)
-      console.log(getUserSigned, 'test user')
+      const getUserSigned = await userModels.getUserSignedForUpdate(id)
+      const checkAvailableUser = await userModels.findUserByUsername(setData.username)
+      console.log(getUserSigned[0].username, 'check user')
+      if (getUserSigned[0].username !== setData.username && checkAvailableUser[0].username === 1) {
+        return helper.response(res, false, 'email unavailable', 400)
+      }
       if (req.file) {
         setData.picture = `${env.APP_UPLOAD_ROUTE}/${req.file.filename}`
-        console.log(true)
       } else {
         setData.picture = getUserSigned[0].picture
-        console.log(false)
       }
-      console.log(req.file, 'picture')
+      if (req.file !== undefined && getUserSigned[0].picture !== null) {
+        const slicedPicture = getUserSigned[0].picture.slice('7')
+        fs.unlinkSync(`${path}${slicedPicture}`, (err, pictureData) => {
+          if (!err) return helper.response(res, true, pictureData, 200)
+        })
+      }
       const errValidate = validationResult(req)
       if (setData.username) {
         if (!errValidate.isEmpty()) {
           return helper.response(res, false, errValidate.errors[0].msg, 400)
         }
       }
-      const cleanData = (setNewData) => {
-        for (const newData in setNewData) {
-          if (setNewData[newData] === undefined || setNewData[newData] === null || setNewData[newData] === '') {
-            setNewData = setNewData[getUserSigned[0]]
-          }
-        }
-        return setNewData
-      }
-      const result = await userModels.updateUserInfo(cleanData(setData), id)
+      console.log(setData)
+      const result = await userModels.updateUserInfo(setData, id)
       return helper.response(res, true, result, 200)
     } catch (err) {
       console.log(err)
       return helper.response(res, false, 'failed to update profile', 400)
+    }
+  },
+
+  confirmPassword: async (req, res) => {
+    const { password } = req.body
+    try {
+      const user = req.authUser.result
+      const result = await userModels.confirmPassword(user.id)
+      const compare = await bcrypt.compare(password, result[0].password)
+      console.log(compare, 'result')
+      if (!compare) return helper.response(res, false, 'Password did not match to the record', 400)
+      return helper.response(res, true, compare, 200)
+    } catch (err) {
+      console.log(err)
+      return helper.response(res, false, 'An error occured', 500)
     }
   },
 
@@ -73,13 +90,14 @@ module.exports = {
     const { id } = req.authUser.result
     const key = Object.keys(req.body)
     const lastColumn = key[0]
+    if (setData.password.length < 8) return helper.response(res, false, 'password must be 8 or greater characters long', 400)
+    if (setData.resendPassword !== setData.password) return helper.response(res, false, 'password did not match', 400)
     setData.password = await bcrypt.hash(setData.password, await bcrypt.genSalt())
     const updateData = { id, [lastColumn]: setData[lastColumn] }
     console.log(updateData)
     try {
-      console.log(typeof updateData.password, updateData.password)
       const passwordResult = await userModels.updatePassword(updateData)
-      if (setData.password.length < 8) return helper.response(res, false, 'password must be 8 or greater characters long', 400)
+      console.log(setData.password, 'test')
       return helper.response(res, true, passwordResult, 200)
     } catch (err) {
       console.log(err)

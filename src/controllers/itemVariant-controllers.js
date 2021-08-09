@@ -82,10 +82,9 @@ module.exports = {
   },
 
   postItemsToItemVariant: async function (req, res) {
-    const { id } = req.params
-    const setData = { additionalPrice: req.body.additional_price, variantId: req.body.variant_id }
+    const setData = req.body
     try {
-      const result = await variantModels.postItemsToItemVariant(setData, id)
+      const result = await variantModels.postItemsToItemVariant(setData)
       return helper.response(res, 'success', result, 200)
     } catch (err) {
       console.log(err)

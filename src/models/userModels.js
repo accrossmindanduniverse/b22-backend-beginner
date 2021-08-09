@@ -16,7 +16,11 @@ module.exports = {
     return execPromise('SELECT COUNT (*) username FROM users WHERE username=?', [data])
   },
 
-  getUserSinged: function (id) {
+  getUserSigned: function (id) {
+    return execPromise('SELECT id, first_name, last_name, phone_number, picture, name, username, user_address FROM users WHERE id=?', [id])
+  },
+
+  getUserSignedForUpdate: function (id) {
     return execPromise('SELECT id, first_name, last_name, phone_number, picture, name, username, user_address FROM users WHERE id=?', [id])
   },
 
@@ -30,6 +34,10 @@ module.exports = {
         }
       })
     })
+  },
+
+  confirmPassword: function (id) {
+    return execPromise('SELECT * from users WHERE id=?', id)
   },
 
   updatePassword: function (data) {

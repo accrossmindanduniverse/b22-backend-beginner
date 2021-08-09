@@ -30,6 +30,10 @@ module.exports = {
     return execPromise('SELECT items.id, items.name, items.picture, items.quantity, items.price, items.item_description, items.delivery_on, items.created_at, items.updated_at FROM items WHERE id=?', [id])
   },
 
+  getItemForUpdate: function (id) {
+    return execPromise('SELECT items.id, items.name, items.picture, items.quantity, items.price, items.item_description, items.delivery_on, items.created_at, items.updated_at FROM items WHERE id=?', [id])
+  },
+
   getPriceDetail: function (query) {
     const key = Object.values(query)
     return new Promise((resolve, reject) => {
@@ -63,52 +67,7 @@ module.exports = {
   },
 
   updateItemDatas: function (data, id) {
-    let dbGet
-    db.query('SELECT * FROM items WHERE id=?', [id], function (err, res) {
-      if (!err) {
-        if (id.length > 0) {
-          dbGet = res
-        } else {
-          return err
-        }
-      }
-    })
-
-    db.query('UPDATE items SET ? WHERE id=?', [data, id], function (err, res) {
-      if (!err) {
-        return res
-      } else {
-        return err
-      }
-    })
-
-    return new Promise((resolve, reject) => {
-      db.query('SELECT * FROM items WHERE id=?', [id], function (err, res) {
-        console.log(res)
-        if (!err) {
-          const dataUpdated = {
-            id: dbGet[0].id,
-            initial: {
-              name: dbGet[0].name,
-              picture: dbGet[0].picture,
-              price: dbGet[0].price,
-              created_at: dbGet[0].created_at,
-              updated_at: dbGet[0].updated_at
-            },
-            changedData: {
-              changed_name: res[0].name,
-              changed_picture: res[0].picture,
-              changed_price: res[0].price,
-              created_at: res[0].created_at,
-              updated_at: res[0].updated_at
-            }
-          }
-          resolve(dataUpdated)
-        } else {
-          reject(err)
-        }
-      })
-    })
+    return execPromise('UPDATE items SET ? WHERE id=?', [data, id])
   },
 
   updateItemPartial: function (data) {

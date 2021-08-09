@@ -1,5 +1,5 @@
-const { checkSchema } = require('express-validator')
-// const { findUserByUsername } = require('../models/userModels')
+const { checkSchema, check } = require('express-validator')
+const { findUserByUsername } = require('../models/userModels')
 const errors = require('../helpers/errors')
 
 const validator = [
@@ -20,15 +20,15 @@ const validator = [
         }
       }
     }
-  })
-  // check('username')
-  //   .exists()
-  //   .custom(async (username) => {
-  //     const result = await findUserByUsername(username)
-  //     if (result[0].username === 1) {
-  //       throw new Error('username unavailable, please input another one')
-  //     }
-  //   }),
+  }),
+  check('username')
+    .exists()
+    .custom(async (username) => {
+      const result = await findUserByUsername(username)
+      if (result[0].username === 1) {
+        throw new Error('username unavailable, please input another one')
+      }
+    })
   // check('resend_password')
   //   .exists()
   //   .custom(async (matchPassword, { req }) => {

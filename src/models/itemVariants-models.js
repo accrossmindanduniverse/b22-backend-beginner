@@ -3,7 +3,7 @@ const { promisify } = require('util')
 const execPromise = promisify(db.query).bind(db)
 module.exports = {
 
-  postItemsToItemVariant: function (data) {
+  postItemsToItemVariant: function (data, id) {
     return new Promise((resolve, reject) => {
       db.query('INSERT INTO item_variants SET ?', [data], function (err, res) {
         console.log(data)
