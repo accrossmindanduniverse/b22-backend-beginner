@@ -1,4 +1,4 @@
-const db = require('../helpers/db')
+const { db } = require('../helpers/db')
 const { promisify } = require('util')
 
 const execPromise = promisify(db.query).bind(db)

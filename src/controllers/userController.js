@@ -13,7 +13,7 @@ module.exports = {
     try {
       const result = await userModels.getUserById(cond)
       if (result[0].picture !== undefined || result[0].picture !== null) {
-        result[0].picture = `${env.APP_URL}/${result[0].picture}`
+        result[0].picture = `${result[0].picture}`
       }
       return helper.response(res, true, result, 200)
     } catch (err) {
@@ -23,8 +23,8 @@ module.exports = {
   },
 
   getUserSigned: async (req, res) => {
-    const { id } = req.authUser.result
-    console.log(id)
+    console.log(req.authUser, 'test result 12390')
+    const { id } = req.authUser.result[0]
     try {
       const result = await userModels.getUserSigned(id)
       return helper.response(res, true, result, 200)
@@ -36,7 +36,7 @@ module.exports = {
 
   updateUserInfo: async function (req, res) {
     const setData = req.body
-    const id = req.authUser.result.id
+    const { id } = req.authUser.result[0]
     try {
       const getUserSigned = await userModels.getUserSignedForUpdate(id)
       const checkAvailableUser = await userModels.findUserByUsername(setData.username)
@@ -70,11 +70,35 @@ module.exports = {
     }
   },
 
+  uploadPicture: async (req, res) => {
+    const { id } = req.authUser.result[0]
+    const setData = req.body
+    try {
+      const getUserSigned = await userModels.getUserSignedForUploadPicture(id)
+      if (req.file) {
+        setData.picture = `${env.APP_UPLOAD_ROUTE}/${req.file.filename}`
+      } else {
+        setData.picture = getUserSigned[0].picture
+      }
+      if (req.file !== undefined && getUserSigned[0].picture !== null) {
+        const slicedPicture = getUserSigned[0].picture.slice('7')
+        fs.unlinkSync(`${path}${slicedPicture}`, (err, pictureData) => {
+          if (!err) return helper.response(res, true, pictureData, 200)
+        })
+      }
+      const result = await userModels.uploadPicture(setData, id)
+      return helper.response(res, true, result, 200)
+    } catch (err) {
+      console.log(err)
+      return helper.response(res, false, 'An error occured', 500)
+    }
+  },
+
   confirmPassword: async (req, res) => {
     const { password } = req.body
     try {
-      const user = req.authUser.result
-      const result = await userModels.confirmPassword(user.id)
+      const { id } = req.authUser.result[0]
+      const result = await userModels.confirmPassword(id)
       const compare = await bcrypt.compare(password, result[0].password)
       console.log(compare, 'result')
       if (!compare) return helper.response(res, false, 'Password did not match to the record', 400)
@@ -87,7 +111,7 @@ module.exports = {
 
   updatePassword: async function (req, res) {
     const setData = req.body
-    const { id } = req.authUser.result
+    const { id } = req.authUser.result[0]
     const key = Object.keys(req.body)
     const lastColumn = key[0]
     if (setData.password.length < 8) return helper.response(res, false, 'password must be 8 or greater characters long', 400)

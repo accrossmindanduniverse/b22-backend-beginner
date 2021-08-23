@@ -31,7 +31,7 @@ module.exports = {
           const shippingCost = 10000
           const itemVariants = data.variant
           const paymentMethod = data.payment_method
-          const userId = req.authUser.result.id
+          const userId = req.authUser.result[0].id
           getUserByIdSync(userId, (errId, resultId) => {
             if (errId) throw errId
             const { shippingAddress } = resultId[0].user_address
@@ -66,7 +66,7 @@ module.exports = {
   },
 
   getAllTransactions: async (req, res) => {
-    const id = req.authUser.result.id
+    const id = req.authUser.result[0].id
     console.log(id)
     try {
       const result = await getAllTransactions(id)

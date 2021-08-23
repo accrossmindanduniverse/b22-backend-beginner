@@ -1,8 +1,6 @@
 const helper = require('../helpers')
 const itemModels = require('../models/itemModels')
 const { postItemsToItemCategory } = require('../models/itemCategories-models')
-const path = './assets/pictures'
-const fs = require('fs')
 const env = process.env
 
 module.exports = {

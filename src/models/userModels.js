@@ -1,4 +1,4 @@
-const db = require('../helpers/db')
+const { db } = require('../helpers/db')
 const { promisify } = require('util')
 
 const execPromise = promisify(db.query).bind(db)
@@ -34,6 +34,14 @@ module.exports = {
         }
       })
     })
+  },
+
+  getUserSignedForUploadPicture: function (id) {
+    return execPromise('SELECT id, first_name, last_name, phone_number, picture, name, username, user_address FROM users WHERE id=?', [id])
+  },
+
+  uploadPicture: function (data, id) {
+    return execPromise('UPDATE users SET ? WHERE id=?', [data, id])
   },
 
   confirmPassword: function (id) {

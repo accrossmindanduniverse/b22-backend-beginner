@@ -1,5 +1,6 @@
 const key = process.env
 const helper = require('../helpers')
+const { JWT } = require('../helpers/db')
 const jwt = require('jsonwebtoken')
 
 module.exports = {
@@ -10,16 +11,16 @@ module.exports = {
       if (headers.authorization.startsWith('Bearer')) {
         try {
           const token = headers.authorization.slice(7)
-          const user = jwt.verify(token, key.APP_KEY)
+          const user = jwt.verify(token, JWT.secretKey)
           req.authUser = user
           next()
         } catch (err) {
           console.log(err)
-          return helper.response(res, 'fail', 'Session expired, you have to signin first', 400)
+          return helper.response(res, false, 'Session expired, you have to signin first', 400)
         }
       }
     } else {
-      return helper.response(res, 'fail', 'Auth token needed', 400)
+      return helper.response(res, false, 'Auth token needed', 400)
     }
   },
 

@@ -4,7 +4,8 @@ const authModels = require('../models/authModel')
 const { validationResult } = require('express-validator')
 const jwt = require('jsonwebtoken')
 const { createNewToken } = require('../helpers/createToken')
-const key = process.env
+const { JWT } = require('../helpers/db')
+const { createFCMToken, findToken } = require('../models/fcmToken')
 
 module.exports = {
 
@@ -25,39 +26,66 @@ module.exports = {
     }
   },
 
-  signIn: async function (req, res) {
+  signIn: async (req, res) => {
     const { username, password } = req.body
     try {
       const result = await authModels.signIn(username)
       if (result.length < 1) return helper.response(res, false, 'username or password did not match to the record', 401)
-      if (result[0].picture !== undefined || result[0].picture !== null) {
-        result[0].picture = `${key.APP_URL}${result[0].picture}`
-      }
       const user = result[0]
-      console.log(user)
       const compare = await bcrypt.compare(password, user.password)
       if (compare) {
-        const userData = jwt.sign({ id: user.id, role: user.role, picture: user.picture, name: user.name, user_address: user.user_address, first_name: user.first_name, last_name: user.last_name, phone_number: user.phone_number, username: user.username, password: user.password }, key.APP_KEY)
-        if (userData) {
-          const payload = jwt.verify(userData, key.APP_KEY)
-          const RefreshToken = createNewToken(
-            { ...payload },
-            key.APP_KEY,
-            '10h'
-          )
-          const data = {
-            refreshToken: RefreshToken,
-            userData: payload
-          }
-          console.log(payload)
-          return helper.response(res, true, data, 200)
-        }
+        const token = jwt.sign({ ...result }, JWT.secretKey, {
+          expiresIn: '30s'
+        })
+        const refreshToken = jwt.sign({ ...result }, JWT.refreshSecretKey, {
+          expiresIn: '1m'
+        })
+        const newResult = { refreshToken, token, id: user.id, role: user.role, picture: user.picture, name: user.name, user_address: user.user_address, first_name: user.first_name, last_name: user.last_name, phone_number: user.phone_number, username: user.username, password: user.password }
+        console.log(newResult, 'result test')
+        return helper.response(res, true, newResult, 200)
       } else {
-        return helper.response(res, false, 'email or password did not match to the record', 401)
+        return helper.response(res, false, 'Email or password did not match to the record', 400)
       }
     } catch (err) {
       console.log(err)
-      return helper.response(res, 'fail', 'Internal Server Error', 500)
+      return helper.response(res, false, 'An error occured', 500)
+    }
+  },
+
+  refreshToken: async (req, res) => {
+    const { refreshToken } = req.body
+    try {
+      const payload = jwt.verify(refreshToken, JWT.refreshSecretKey)
+      const token = createNewToken(
+        { ...payload },
+        JWT.secretKey,
+        '24h'
+      )
+      const result = {
+        token: token
+      }
+      return helper.response(res, true, result, 200)
+    } catch (err) {
+      console.log(err)
+      return helper.response(res, false, 'An error occured', 500)
+    }
+  },
+
+  registerToken: async (req, res) => {
+    const user = req.authUser.result[0]
+    const setData = req.body
+    setData.user_id = user.id
+
+    try {
+      const find = await findToken(user.id)
+      if (find.length < 1) {
+        const result = await createFCMToken(setData)
+        return helper.response(res, true, result, 200)
+      }
+      return helper.response(res, true, find, 200)
+    } catch (err) {
+      console.log(err)
+      return helper.response(res, false, 'An error occured', 500)
     }
   }
 
