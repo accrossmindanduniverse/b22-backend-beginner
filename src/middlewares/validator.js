@@ -26,7 +26,7 @@ const validator = [
     .custom(async (username) => {
       const result = await findUserByUsername(username)
       if (result[0].username === 1) {
-        throw new Error('username unavailable, please input another one')
+        throw new Error('email unavailable, please input another one')
       }
     })
   // check('resend_password')

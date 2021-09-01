@@ -2,7 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 const env = process.env
-const port = env.PORT || 3001
+const port = env.PORT || 8000
 const { db } = require('./src/helpers/db')
 const routes = require('./src/routes')
 const bodyParser = require('body-parser')

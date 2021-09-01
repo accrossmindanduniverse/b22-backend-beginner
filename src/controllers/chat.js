@@ -3,6 +3,7 @@ const Chat = require('../models/chat')
 const time = require('../helpers/time')
 const FCMToken = require('../models/fcmToken')
 const firebase = require('../helpers/firebase')
+// eslint-disable-next-line no-unused-vars
 const env = process.env
 
 module.exports = {
@@ -13,16 +14,16 @@ module.exports = {
     setData.sender_id = user.id
     setData.isLatest = 1
     const newIsLatest = 0
-    console.log(req.file, 'file')
+    console.log(req.body, 'file')
     // eslint-disable-next-line camelcase
     const { sender_id, recipient_id } = setData
     try {
       const findUser = await FCMToken.findToken(setData.recipient_id)
-      if (req.file) {
-        setData.file = `${env.APP_FILE_ROUTE}/${req.file.filename}`
-      } else {
-        setData.file = null
-      }
+      // if (req.file) {
+      //   setData.file = `${env.APP_FILE_ROUTE}/${req.file.filename}`
+      // } else {
+      //   setData.file = null
+      // }
       if (parseInt(setData.recipient_id) === user.id) return response(res, false, 'Internal Server Error', 400)
       await Chat.updateIsLatest(newIsLatest, sender_id, parseInt(recipient_id), (err, data) => {
         if (!err) return response(res, true, data, 200)

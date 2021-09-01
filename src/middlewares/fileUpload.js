@@ -1,34 +1,30 @@
-const multer = require('multer')
-const { response } = require('../helpers/index')
+const formidable = require('formidable')
+const { response } = require('../helpers')
+const fs = require('fs')
 const path = require('path')
 
-const maxSize = 1024 * 1024 * 1
+const upload = (req, res, next) => {
+  const maxSize = 2 * 1024 * 1024
 
-const storage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
-    cb(null, path.join(process.cwd(), 'assets', 'files'))
-  },
-  filename: function (_req, file, cb) {
-    const ext = file.originalname.split('.')[1]
-    const date = new Date()
-    cb(null, `${date.getTime()}.${ext}`)
-  }
-})
+  // const form = new formidable.IncomingForm()
+  const form = formidable({ multiples: true, uploadDir: path.join(process.cwd(), 'assets', 'pictures'), maxFileSize: maxSize, keepExtensions: true })
 
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: maxSize }
-}).single('file')
-
-const uploadFilter = (req, res, next) => {
-  upload(req, res, function (err) {
-    if (err instanceof multer.MulterError) {
-      return response(res, false, err.message, 400)
-    } else if (err) {
-      return response(res, false, err.message, 500)
+  form.parse(req, (err, fields, files) => {
+    console.log(files, 'file upload')
+    // const ext = files.picture.split('.')[1]
+    // const date = new Date()
+    // const newPath = path.join(process.cwd(), 'assets', 'pictures') + '/' +
+    //  `${date.getTime()}.${ext}`
+    if (!err) {
+      fs.writeFile((err2, cb) => {
+        if (!err2) return response(res, false, err2, 500)
+        // cb(newPath)
+        return response(res, true, res.send, 200)
+      })
+      next()
     }
-    next()
   })
+  // return response(res, true, form, 200)
 }
 
-module.exports = uploadFilter
+module.exports = upload

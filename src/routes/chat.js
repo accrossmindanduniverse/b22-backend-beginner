@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const chat = require('../controllers/chat')
 const auth = require('../middlewares/authMiddleware')
-const file = require('../middlewares/fileUpload')
+const file = require('../middlewares/upload')
 
 router.get('/room', auth.verifyJwt, chat.getAllChat)
 router.post('/send', auth.verifyJwt, file, chat.createChat)

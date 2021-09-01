@@ -30,7 +30,7 @@ module.exports = {
     const { username, password } = req.body
     try {
       const result = await authModels.signIn(username)
-      if (result.length < 1) return helper.response(res, false, 'username or password did not match to the record', 401)
+      if (result.length < 1) return helper.response(res, false, 'email or password did not match to the record', 401)
       const user = result[0]
       const compare = await bcrypt.compare(password, user.password)
       if (compare) {
@@ -41,7 +41,6 @@ module.exports = {
           expiresIn: '1m'
         })
         const newResult = { refreshToken, token, id: user.id, role: user.role, picture: user.picture, name: user.name, user_address: user.user_address, first_name: user.first_name, last_name: user.last_name, phone_number: user.phone_number, username: user.username, password: user.password }
-        console.log(newResult, 'result test')
         return helper.response(res, true, newResult, 200)
       } else {
         return helper.response(res, false, 'Email or password did not match to the record', 400)
