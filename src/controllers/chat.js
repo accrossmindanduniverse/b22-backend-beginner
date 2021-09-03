@@ -14,7 +14,6 @@ module.exports = {
     setData.sender_id = user.id
     setData.isLatest = 1
     const newIsLatest = 0
-    console.log(req.body, 'file')
     // eslint-disable-next-line camelcase
     const { sender_id, recipient_id } = setData
     try {
@@ -25,9 +24,7 @@ module.exports = {
       //   setData.file = null
       // }
       if (parseInt(setData.recipient_id) === user.id) return response(res, false, 'Internal Server Error', 400)
-      await Chat.updateIsLatest(newIsLatest, sender_id, parseInt(recipient_id), (err, data) => {
-        if (!err) return response(res, true, data, 200)
-      })
+      await Chat.updateIsLatest(newIsLatest, sender_id, parseInt(recipient_id))
       const result = await Chat.createChat(setData)
       result.data = {
         id: result.insertId,
@@ -55,46 +52,12 @@ module.exports = {
       }
       return response(res, true, result.data, 200)
     } catch (err) {
+      // istanbul ignore next
       console.log(err)
+      // istanbul ignore next
       return response(res, false, 'An error occured', 500)
     }
   },
-
-  // deleteChatRoom: async (req, res) => {
-  //   const { id } = req.authUser.result[0]
-  //   const setData = req.body
-  //   setData.deleted_at = time.now()
-  //   setData.deleted_by = setData.deleted_by || id
-  //   const newData = {
-  //     deleted_at: setData.deleted_at,
-  //     deleted_by: 'both deleted'
-  //   }
-  //   const newData2 = {
-  //     deleted_at: setData.deleted_at,
-  //     deleted_by: id
-  //   }
-  //   try {
-  //     const getResult = await Chat.getChatRoom(setData.recipient_id, id.toString())
-  //     getResult.map((e) => {
-  //       if (getResult[getResult.length - 1].deleted_by !== id.toString() && getResult[getResult.length - 1].deleted_by !== null) {
-  //         newData.deleted_by = 'both deleted'
-  //       } else {
-  //         newData.deleted_by = id
-  //       }
-  //       return e
-  //     })
-  //     await Chat.deletePatch(newData2, id, parseInt(setData.recipient_id), (err, patchRes) => {
-  //       if (!err) return response(res, true, patchRes, 200)
-  //     })
-  //     const result = await Chat.deleteChatRoom(newData, id, parseInt(setData.recipient_id), id)
-  //     if (getResult[getResult.length - 1].deleted_by !== id.toString() && getResult[getResult.length - 1].deleted_by !== null) newData2.deleted_by = 'both deleted'
-  //     return response(res, true, result, 200)
-  //     // console.log(getResult[getResult.length - 2].deleted_by, 'deleted')
-  //   } catch (err) {
-  //     console.log(err)
-  //     return response(res, false, 'An error occured', 500)
-  //   }
-  // },
 
   deleteChatRoom: async (req, res) => {
     const signed = req.authUser.result[0]
@@ -109,23 +72,20 @@ module.exports = {
         await Chat.newDeleteChatRoom({
           deleted_at: setData.deleted_at,
           deleted_by: signed.id
-        }, signed.id, id, (err, deleteResult) => {
-          if (!err) return response(res, true, deleteResult, 200)
-        })
+        }, signed.id, id)
       }
       if (other.length > 0) {
+        // istanbul ignore next
         await Chat.newDeleteChatRoomForNonNull({
           deleted_at: setData.deleted_at,
           deleted_by: 'both deleted'
-        }, signed.id, id, (err, deleteResult2) => {
-          if (!err) return response(res, true, deleteResult2, 200)
-        })
+        }, signed.id, id)
       }
-      console.log(result.length, 'first result')
-      console.log(other.length, 'second result')
       return response(res, true, [result, other], 200)
     } catch (err) {
+      // istanbul ignore next
       console.log(err)
+      // istanbul ignore next
       return response(res, false, 'An error occured', 500)
     }
   },
@@ -144,18 +104,20 @@ module.exports = {
         }
         return e
       })
-      console.log(newData, 'data new data')
       newData.map((e, idx) => {
         if (newData[idx].deleted_by === user.id.toString() || newData[idx].deleted_by === 'both deleted') {
           delete newData[idx]
         } else {
+          // istanbul ignore next
           newArr.push(newData[idx])
         }
         return e
       })
       return response(res, true, newArr, 200)
     } catch (err) {
+      // istanbul ignore next
       console.log(err)
+      // istanbul ignore next
       return response(res, false, 'An error occured', 500)
     }
   },
@@ -167,17 +129,22 @@ module.exports = {
     try {
       const result = await Chat.getChatBySingedUser(id, recipient)
       result.map((e, idx) => {
+        // istanbul ignore next
         if (result[idx].deleted_by === id.toString() || result[idx].deleted_by === 'both deleted') {
           delete result[idx]
         } else {
+          // istanbul ignore next
           newResult.push(result[idx])
         }
+        // istanbul ignore next
         return e
       })
       if (newResult.includes > 1) delete [newResult]
       return response(res, true, newResult, 200)
     } catch (err) {
+      // istanbul ignore next
       console.log(err)
+      // istanbul ignore next
       return response(res, false, 'An error occured', 500)
     }
   }

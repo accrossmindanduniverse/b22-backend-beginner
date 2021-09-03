@@ -1,11 +1,8 @@
 const { expect } = require('chai')
-const assert = require('assert')
 const sinon = require('sinon')
-const supertest = require('supertest')
 
 let { signUp, signIn, refreshToken, registerToken } = require('../src/controllers/authController')
-
-const { APP_URL } = process.env
+const { findToken } = require('../src/models/fcmToken')
 
 const mockingResponse = () => {
   const res = {}
@@ -17,27 +14,50 @@ const mockingResponse = () => {
 describe('Auth: sign up', () => {
 
   it('email unavailable', (done) => {
-    supertest(APP_URL)
-    .post('/auth/signup')
-    .send('name=user&username=user20@mail.com&password=12345678')
-    .expect(400)
-    .end((err, res) => {
-      expect(res.body.result).to.be.false
-      expect(res.body.data).equal('email unavailable, please input another one')
-      done()
+    const req = {
+      body: {
+        name: 'user name',
+        username: 'user20@mail.com',
+        password: '12345678'
+      }
+    }
+    
+    const response = mockingResponse()
+    signUp(req, response).then((data) => {
+      expect(data.status.args[0][0]).to.be.equal(400)
+      data.status.args[0][0].result.should.to.be.false
     })
+    done()
   })
 
   it (`password can't be less than 8 characters`, (done) => {
-    supertest(APP_URL)
-    .post('/auth/signup')
-    .send('name=user&username=user889@mail.com&password=123')
-    .expect(400)
-    .end((err, res) => {
-      expect(res.body.result).to.be.false
-      expect(res.body.data).equal('password must be 8 or greater characters long')
-      done()
+    const req = {
+      body: {
+        name: 'user name',
+        username: 'user@mail.com',
+        password: '12345'
+      }
+    }
+    
+    const response = mockingResponse()
+    signUp(req, response).then((data) => {
+      expect(data.status.args[0][0]).to.be.equal(400)
+      expect(data.status.args[0][0].result).to.be.false
     })
+    done()
+  })
+
+  it('failed to create account', (done) => {
+    const req = {
+      body: {}
+    }
+    
+    const response = mockingResponse()
+    signUp(req, response).then((data) => {
+      expect(data.status.args[0][0]).to.be.equal(400)
+      expect(data.status.args[0][0].result).to.be.false
+    })
+    done()
   })
 
   // it('success', (done) => {
@@ -74,6 +94,7 @@ describe('Auth: sign up', () => {
       signIn(req, response).then((data) => {
         expect(data.status.args[0][0]).to.be.equal(400)
         expect(data.status.args[0][0].result).to.be.false
+        expect(signin.json.args[0][0].data).to.be.equal('Email or password did not match to the record')
       })
       done()
     })
@@ -87,30 +108,49 @@ describe('Auth: sign up', () => {
       }
       const response = mockingResponse()
       const signin = await signIn(req, response)
-      const { token, refreshToken } = signin.json.args[0][0].data
+      const { token, refreshToken: newRefresh } = signin.json.args[0][0].data
+      const request = {
+        headers: {
+          Authorization: token
+        },
+        body: {
+          refreshToken: newRefresh
+        }
+      }
+      await refreshToken(request, response)
       expect(signin.status.args[0][0]).to.be.equal(200)
       expect(signin.json.args[0][0].result).to.be.true
-      // expect(signin.status.args[0][0].result).to.be.true
-        supertest(APP_URL)
-        .post('/auth/refresh-token')
-        .set('Authorization', `Bearer ${token}`)
-        .send(`refreshToken=${refreshToken}`)
-        .end(async (err, res) => {
-          expect(res.body.result).to.be.true
-          expect(res.body.data.token).to.be.a('string')
-          const varToken = res.body.data.token
+    })
+  })
 
-          let fcmReq = {
-            body: {
-              token: 'stringToken123'
-            },
-            headers: {
-              Authorization: varToken
-            }
+  describe('Auth: register fcm token', () => {
+    
+    it('failed', async() => {
+      const req = {
+        body: {
+          user_id: 173,
+          token: 'FCMToken1234'
+        }
+      }
+      const res = mockingResponse()
+      const find = await findToken(138, res)
+      if (find.length < 1) {
+        await registerToken(req, res)
+      }
+      
+    })
+
+    it('success', (done) => {
+        const req = {
+          body: {
+            user_id: 173,
+            token: 'FCMToken1234'
           }
-          const fcm = await registerToken(fcmReq, response)
-          console.log(fcm, 'test 123')
+        }
+        const res = mockingResponse()
+        registerToken(req, res).then((data) => {
+          console.log(data, 'test data token')
         })
-
+        done()
     })
   })

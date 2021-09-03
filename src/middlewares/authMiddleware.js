@@ -30,9 +30,10 @@ module.exports = {
       if (headers.authorization.startsWith('Bearer')) {
         try {
           const token = headers.authorization.slice(7)
-          const decode = jwt.verify(token, key.APP_KEY)
+          const decode = jwt.verify(token, JWT.secretKey)
           req.decodedToken = decode
-          if (req.decodedToken.result.role !== 'admin') {
+          console.log(decode.result[0], 'test admin')
+          if (decode.result[0].role !== 'admin') {
             return helper.response(res, false, 'you do not have any permission to access this resource', 400)
           }
           next()

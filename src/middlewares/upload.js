@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: { fileSize: maxSize }
-}).single('file')
+}).single('picture')
 
 const uploadFilter = (req, res, next) => {
   console.log(req, 'test mmulter first')

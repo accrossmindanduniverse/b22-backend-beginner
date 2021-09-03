@@ -42,7 +42,7 @@ const upload = multer({
 router.get('/', authMiddleware.verifyJwt, userController.getUserById)
 router.get('/signed', authMiddleware.verifyJwt, userController.getUserSigned)
 router.put('/update-profile', authMiddleware.verifyJwt, upload.single('picture'), userController.updateUserInfo)
-router.put('/upload-picture', authMiddleware.verifyJwt, upload.single('picture'), userController.uploadPicture)
+// router.put('/upload-picture', authMiddleware.verifyJwt, upload.single('picture'), userController.uploadPicture)
 router.post('/confirm-password', authMiddleware.verifyJwt, userController.confirmPassword)
 router.patch('/update-password', authMiddleware.verifyJwt, userController.updatePassword)
 
