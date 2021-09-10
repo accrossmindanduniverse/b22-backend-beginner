@@ -8,7 +8,6 @@ const time = require('../src/helpers/time')
 const chai = require('chai')
 const supertest = require('supertest')
 chai.should()
-const { APP_URL } = process.env
 
 
 const mockingResponse = () => {
