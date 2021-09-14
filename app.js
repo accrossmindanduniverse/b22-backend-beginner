@@ -9,7 +9,7 @@ const bodyParser = require('body-parser')
 const server = require('http').createServer(app)
 const io = require('socket.io')(server, {
   cors: {
-    origin: 'http://localhost:3000'
+    origin: 'https://relaxed-swartz-622ed9.netlify.app/'
   }
 })
 const cors = require('cors')
