@@ -6,7 +6,7 @@ const port = env.PORT || 8000
 const { db } = require('./src/helpers/db')
 const routes = require('./src/routes')
 const bodyParser = require('body-parser')
-const server = require('http').createServer(app)
+const server = require('https').createServer(app)
 const io = require('socket.io')(server, {
   cors: {
     origin: 'https://relaxed-swartz-622ed9.netlify.app/'
