@@ -1,5 +1,9 @@
 const { expect } = require('chai')
 const sinon = require('sinon')
+const supertest = require('supertest')
+
+const { APP_URL } = process.env
+
 
 let { signUp, signIn, refreshToken, registerToken } = require('../src/controllers/authController')
 const { findToken } = require('../src/models/fcmToken')
@@ -60,24 +64,24 @@ describe('Auth: sign up', () => {
     done()
   })
 
-  // it('success', (done) => {
-  //   const req = {
-  //     body: {
-  //       name: 'user name',
-  //       username: 'user@mail.com',
-  //       password: '12345678'
-  //     }
-  //   }
+  it('success', (done) => {
+    const req = {
+      body: {
+        name: 'user name',
+        username: 'user@mail.com',
+        password: '12345678'
+      }
+    }
     
-  //   const response = mockingResponse()
-  //   signUp(req, response).then((data) => {
-  //     expect(data.status.args[0][0]).to.be.equal(200)
-  //     expect(data.status.args[0][0].result).to.be.true
-  //     expect(data.json.args[0][0].data).to.be.a('object')
-  //   })
-  //   done()
+    const response = mockingResponse()
+    signUp(req, response).then((data) => {
+      expect(data.status.args[0][0]).to.be.equal(200)
+      expect(data.status.args[0][0].result).to.be.true
+      expect(data.json.args[0][0].data).to.be.a('object')
+    })
+    done()
 
-  //   })
+    })
   })
 
 
@@ -109,6 +113,15 @@ describe('Auth: sign up', () => {
       const response = mockingResponse()
       const signin = await signIn(req, response)
       const { token, refreshToken: newRefresh } = signin.json.args[0][0].data
+      supertest(APP_URL)
+      .post('/auth/refresh-token')
+      .set('Authorization', `Bearer ${token}`)
+      .send(`refreshToken=${newRefresh}`)
+      .expect(200)
+      .end((err, res) => {
+        expect(res.body.result).to.be.true
+        expect(res.body.data.token).to.be.a('string')
+      })
       const request = {
         headers: {
           Authorization: token

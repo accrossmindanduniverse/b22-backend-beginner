@@ -1,24 +1,24 @@
 const mysql = require('mysql2')
 
 const {
-  MYSQL_HOST_DEV,
-  MYSQL_USER_DEV,
-  MYSQL_PASSWORD_DEV,
-  MYSQL_DATABASE_DEV,
-  JWT_SECRET_KEY_DEV,
-  JWT_REFRESH_SECRET_DEV
+  MYSQL_HOST,
+  MYSQL_USER,
+  MYSQL_PASSWORD,
+  MYSQL_DATABASE,
+  JWT_SECRET_KEY,
+  JWT_REFRESH_SECRET
 } = process.env
 
 const connection = {
   db: mysql.createConnection({
-    host: MYSQL_HOST_DEV,
-    user: MYSQL_USER_DEV,
-    password: MYSQL_PASSWORD_DEV,
-    database: MYSQL_DATABASE_DEV
+    host: MYSQL_HOST,
+    user: MYSQL_USER,
+    password: MYSQL_PASSWORD,
+    database: MYSQL_DATABASE
   }),
   JWT: {
-    secretKey: JWT_SECRET_KEY_DEV,
-    refreshSecretKey: JWT_REFRESH_SECRET_DEV
+    secretKey: JWT_SECRET_KEY,
+    refreshSecretKey: JWT_REFRESH_SECRET
   }
 }
 
